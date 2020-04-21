@@ -54,6 +54,6 @@ async function execute() {
 
     await fs.writeFile('./data/municipios.json', JSON.stringify(json));
     await fs.writeFile('./data/municipios.csv', csv);
-}
+};
 
 execute();
