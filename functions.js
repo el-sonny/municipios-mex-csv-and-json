@@ -11,7 +11,7 @@ function getPoints(entries) {
   }
 
   const result = entries.reduce((acc, it) => {
-    const compoundKey = it.Cve_Ent + it.Cve_Mun;
+    const compoundKey = `${it.Cve_Ent}${it.Cve_Mun}`;
 
     const point = {
       lat: parseFloat(it.Lat_Decimal),
@@ -37,9 +37,36 @@ function getPoints(entries) {
   return result;
 }
 
-function getFinalData(municipalities) {
+function getPopObj(popArr) {
+  const res = popArr.reduce((acc, it) => {
+    const {
+      Cve_Ent: entityCode,
+      Nom_Ent: entityName,
+      Cve_Mun: municipalityCode,
+      Nom_Mun: municipalityName,
+      Pob_Total: populationStr,
+    } = it;
+
+    acc[`${entityCode}${municipalityCode}`] = {
+      entityCode,
+      entityName,
+      municipalityCode,
+      municipalityName,
+      population: parseInt(populationStr)
+    };
+
+    return acc;
+  }, {});
+
+  return res;
+}
+
+async function getFinalData(municipalities) {
+  const popDataArr = await parse('AGEEML_2020421930442.csv');
+  const popDataObj = getPopObj(popDataArr);
+
   const jsonData = Object.entries(municipalities).map(m => {
-    const entry = m[1];
+    const [mun, entry] = m;
     const { entityCode, entityName, municipalityCode, municipalityName, points } = entry;
 
     const sum = points.reduce((acc, curr) => ({ lat: acc.lat + curr.lat, lon: acc.lon + curr.lon }));
@@ -53,8 +80,6 @@ function getFinalData(municipalities) {
 
       return acc;
     }, { lat: 0, lon: 0, population: -1 });
-    // const populations = entry.points.map(l => isNaN(l.population) ? 0 : l.population);
-    // const popCenterIndex = populations.indexOf(Math.max(...populations));
 
     return {
       entityCode,
@@ -64,7 +89,8 @@ function getFinalData(municipalities) {
       avgLat: sum.lat / points.length,
       avgLon: sum.lon / points.length,
       popCenterLat: maxPop.lat,
-      popCenterLon: maxPop.lon
+      popCenterLon: maxPop.lon,
+      population: popDataObj[mun].population
     }
   });
 

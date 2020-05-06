@@ -40,11 +40,12 @@ describe('Check getFinalData Functionality', () => {
       avgLat: expect.any(Number),
       avgLon: expect.any(Number),
       popCenterLat: 21.161416,
-      popCenterLon: -86.824811
+      popCenterLon: -86.824811,
+      population: 661176
     }
     const mockData = await scriptFunctions.parse('testData.csv');
     const testData = scriptFunctions.getPoints(mockData);
-    const finalTestData = scriptFunctions.getFinalData(testData);
+    const finalTestData = await scriptFunctions.getFinalData(testData);
     expect(Array.isArray(finalTestData)).toBe(true);
     expect(finalTestData).toEqual(expect.arrayContaining([expected]));
     const municipality = finalTestData.filter(it => it.entityCode === '23' && it.municipalityCode === '005')[0];
